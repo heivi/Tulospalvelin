@@ -1,0 +1,24 @@
+{
+  "name": "@heivi/tulospalvelin",
+  "version": "0.0.1",
+  "description": "Pirilä XML listening server",
+  "repository": "./",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "author": "heivi",
+  "license": "MIT",
+  "dependencies": {
+    "binary-parser": "^1.1.5",
+    "mutex": "^1.0.4",
+    "sequelize": "^3.24.6",
+    "uuid": "^2.0.3",
+    "xml2js": "^0.4.17"
+  },
+  "devDependencies": {
+    "mysql": "^2.11.1",
+    "sqlite3": "^3.1.8"
+  }
+}
