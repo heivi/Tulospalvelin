@@ -12,7 +12,10 @@
   "license": "MIT",
   "dependencies": {
     "binary-parser": "^1.1.5",
+    "continuation-local-storage": "^3.2.0",
+    "express": "^4.14.0",
     "mutex": "^1.0.4",
+    "pg": "^6.1.0",
     "sequelize": "^3.24.6",
     "uuid": "^2.0.3",
     "xml2js": "^0.4.17"

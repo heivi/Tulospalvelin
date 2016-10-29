@@ -1,8 +1,20 @@
-const Sequelize = require('sequelize');
+const cls = require('continuation-local-storage');
+const clsns = cls.createNamespace('pirilatp');
+
+var Sequelize = require('sequelize');
+
+Sequelize.cls = clsns;
+
 const sequelize = new Sequelize('tpdb', 'tpuser', 'tpsala', {
 	host: 'localhost',
-	dialect: 'sqlite',
-	storage: './database.sqlite'
+	isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE,
+	dialect: 'postgres',
+//	storage: './database.sqlite',
+	logging: false,
+	pool: false,
+	retry: {
+		max: 999
+	}
 });
 
 const Kisa = sequelize.define('kisa', {
@@ -89,5 +101,6 @@ module.exports = {
 	VAPiste,
 	Sarja,
 	Kilpailija,
-	Tulos
+	Tulos,
+	clsns
 }
