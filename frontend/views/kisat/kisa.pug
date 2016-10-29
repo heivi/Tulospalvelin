@@ -1,0 +1,29 @@
+extends ../layout
+
+block content
+  h1= title
+  a(href='..') <- Back
+  table
+    thead
+      tr
+        th
+        th Splits
+        th
+    tbody
+      each sarja in taulukkoDatat
+        tr
+          td
+            - let sarjannimi = sarja['sarja'];
+            //a(href=sarjannimi)= sarjannimi
+            =sarjannimi
+          each vapiste in sarja['vapisteet']
+            - let pisteennumero = vapiste['nro'];
+            - let pisteenmatka = vapiste['matka'];
+            td
+              if pisteennumero == 0
+                a(href=sarjannimi+'/'+pisteennumero)= 'Finish (' + pisteenmatka +')'
+              else
+                a(href=sarjannimi+'/'+pisteennumero)= pisteenmatka
+              //| &nbsp;&nbsp;&nbsp;
+          td
+            a(href=sarjannimi+'/start') Start times

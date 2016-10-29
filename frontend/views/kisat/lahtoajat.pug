@@ -1,0 +1,21 @@
+extends ../layout
+
+block content
+  h1= title
+  a(href='../..') <- Back
+  h2= sarja
+  table
+    thead
+      tr
+        th No
+        th Name
+        th Start time
+    tbody
+      each rivi in lahtoajat
+        tr
+          td
+            =rivi.nro
+          td
+            =rivi.nimi
+          td
+            =rivi.lahtoaika

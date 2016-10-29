@@ -1,0 +1,11 @@
+extends ../layout
+
+block content
+  h1= title
+  table
+    tbody
+      each kisa in kisat
+        tr
+          td
+            a(href=kisa.tunnus+'/')= kisa.nimi
+          td= kisa.pvm

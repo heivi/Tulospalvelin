@@ -1,5 +1,5 @@
 {
-  "name": "@heivi/tulospalvelin",
+  "name": "@heivi/tulospalvelin-server",
   "version": "0.0.1",
   "description": "Pirilä XML listening server",
   "repository": "./",
