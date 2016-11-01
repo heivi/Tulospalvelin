@@ -1,6 +1,7 @@
 /**
  * Pirilä XML kuuntelija
  * Käyttö: Pirilälle parametri YHTEYSn=TCPx:serverip:serverportti
+ * Palvelimen tulee olla käynnissä ennen Pirilän käynnistystä?
  * Copyright Heikki Virekunnas 2016
  **/
 
@@ -156,7 +157,7 @@ function handleConnection(conn) {
     fs.writeFile("input.xml", xmlrec, function(err) {
 			if (err) throw err;
 		});
-    */
+		*/
 
 		//console.log(d.toString('ascii'));
 		console.log("xml length: "+xmlrec.length);
@@ -173,7 +174,7 @@ function handleConnection(conn) {
 					if (err) throw err;
 				});
         */
-        
+
 				//console.log(JSON.stringify(result));
 
 				// {"root":{"ResultRecord":[{"Participant":[{"Name":[{"Family":["LC$tti"],"Given":["Erkki"]}],"Races":[{"Race":[{"$":{"RaceNo":"1"},"Bib":["701"],"ClassId":["H85"],"StartTime":["14:08:00"],"Result":["00:22:29"],"Rank":["1"],"Status":["OK"],"Intermediaries":[{"Intermediary":[{"$":{"Order":"1"},"Result":["00:00:00"],"Rank":["1"]}]}]}]}]}]},{"Participant":[{"Name":[{"Family":["LC$tti"],"Given":["Erkki"]}],"Races":[{"Race":[{"$":{"RaceNo":"1"},"Bib":["701"],"ClassId":["H85"],"StartTime":["14:08:00"],"Result":["00:22:29"],"Rank":["1"],"Status":["OK"],"Intermediaries":[{"Intermediary":[{"$":{"Order":"2"},"Result":["00:22:04"],"Rank":["1"]}]}]}]}]}]},{"Participant":[{"Name":[{"Family":["LC$tti"],"Given":["Erkki"]}],"Races":[{"Race":[{"$":{"RaceNo":"1"},"Bib":["701"],"ClassId":["H85"],"StartTime":["14:08:00"],"Result":["00:22:29"],"Rank":["1"],"Status":["OK"],"Intermediaries":[{"Intermediary":[{"$":{"Order":"3"},"Result":["00:00:00"],"Rank":["0"]}]}]}]}]}]}]}}
@@ -192,8 +193,6 @@ function handleConnection(conn) {
 						let kisa = kisajaluotu[0];
 						let luotu = kisajaluotu[1];
 
-
-						// TODO: transactions
 						kisa.set('nimi', kisanimi);
 						kisa.set('pvm', kisapvm);
 						if (!!kisa.changed() && ['nimi', 'pvm'].some(v=> kisa.changed().indexOf(v) >= 0)) {
@@ -203,9 +202,11 @@ function handleConnection(conn) {
 									console.log("Error saving kisa: "+err);
 									return Promise.rejecet(err);
 								}
+								console.log("Kisa tallennettu");
 								return Promise.resolve(kisa);
 							});
 						} else {
+							console.log("Kisa ei muuttunut");
 							return Promise.resolve(kisa);
 						}
 
@@ -214,25 +215,33 @@ function handleConnection(conn) {
 				}).then(function(kisa) {
 					// kisa commited
 
+					let record = ((result || {})['root'] || {})['ResultRecord'];
+					if (typeof record == 'undefined') {
+						console.log('No ResultRecord!');
+						return Promise.reject("No ResultRecord");
+					} else {
+						console.log("Löytyy ResultRecord");
+					}
 					var len = result['root']['ResultRecord'].length;
 
 					if (len == 0) {
 						// no results?
 						console.log("No results found: "+result);
+						return Promise.reject("No results found");
 					} else {
-
 						for (let i = 0; i < len; i++) {
 							let res = result['root']['ResultRecord'][i];
 							for (let a = 0; a < res['Participant'].length; a++) {
 								for (let b = 0; b < res['Participant'][a]['Races'].length; b++) {
 									db.sequelize.transaction(function(t) {
-
+										// TODO: how is errors handled, ValidationError
 										return db.Sarja.findOrCreate({
 											where: {
+												kisa: kisa.get('id'),
 												sarja: res['Participant'][a]['Races'][b]['Race'][0]['ClassId'][0]
 											}
 										}).then(function(sarjajaluotu) {
-
+											console.log("6");
 											let sarja = sarjajaluotu[0];
 											let sarjaluotu = sarjajaluotu[1];
 
@@ -268,7 +277,6 @@ function handleConnection(conn) {
 													sukunimi: res['Participant'][a]['Name'][0]['Family'][0]*/
 												}
 											}).then(function(kilpailijajaluotu) {
-
 												let kilpailija = kilpailijajaluotu[0];
 												let luotu = kilpailijajaluotu[1];
 
@@ -373,24 +381,12 @@ function handleConnection(conn) {
 
 												arrayOfPromises.push(maalitulosp);
 
-
-												//console.log("Has property");
-												//console.log(res['Participant'][a]['Races'][b]['Race'][0].hasOwnProperty("Intermediaries"));
-
 												if (res['Participant'][a]['Races'][b]['Race'][0].hasOwnProperty("Intermediaries")) {
-
-													//console.log("Not undefined?: ");
-													//console.log(typeof res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries']);
-													//console.log((typeof res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'] !== undefined));
 
 													// vapisteet
 													for (let c = 0; c < res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'].length; c++) {
 														if (res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'][c]['Intermediary'][0]['Result'][0] != "00:00:00") {
 															let vapromise = db.sequelize.transaction(function(t) {
-
-																//console.log(res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'][c]);
-																//console.log(res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'][c]['Intermediary'][0]);
-
 																return db.VAPiste.findOrCreate({
 																	where: {
 																		sarja: sarja.get('id'),
@@ -401,7 +397,7 @@ function handleConnection(conn) {
 																	let vapiste = vapistejaluotu[0];
 																	let vapisteluotu = vapistejaluotu[1];
 
-																	// FIXME: Is this right...?
+																	// TODO: Is this right...?
 																	return new Promise(function(resolve, reject) {
 																		// hae pisteiden etäisyydet muusta tiedosta
 																		var splitDist = ((splitDists || {})[sarja.get('sarja')] || {})[vapiste.get('jarjestys')];
@@ -409,7 +405,6 @@ function handleConnection(conn) {
                                       //console.log("*****SPLIT SET******");
 																			vapiste.set('matka', splitDist.toString());
 																		} else {
-                                      //console.log("*****SPLIT NOT SET******"+sarja.get('sarja'));
 																			vapiste.set('matka', vapiste.get('jarjestys').toString());
 																		}
 
@@ -439,9 +434,6 @@ function handleConnection(conn) {
 																		}).then(function(tulosjaluotu) {
 																			let tulos = tulosjaluotu[0];
 																			let tulosluotu = tulosjaluotu[1];
-																			//console.log(tulos);
-																			//console.log(res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'][c]['Intermediary'][0]['Result'][0]);
-																			//console.log(res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'][c]['Intermediary'][0]['Rank'][0]);
 																			tulos.set('aika', res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'][c]['Intermediary'][0]['Result'][0]);
 																			tulos.set('sija', parseInt(res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'][c]['Intermediary'][0]['Rank'][0]));
 																			//console.log(tulos.changed());
@@ -458,7 +450,6 @@ function handleConnection(conn) {
 																					return Promise.reject(err);
 																				});
 																			} else {
-																				//console.log("VATulos ei muuttunut!");
 																				return Promise.resolve(tulos);
 																			}
 
@@ -486,15 +477,9 @@ function handleConnection(conn) {
 											}).catch(function(err) {
 												console.log(err);
 											});
-
-
-
-
 										}).catch(function(err) {
 											console.log(err);
 										});
-
-
 									}).catch(function(err) {
 										console.log(err);
 									});

@@ -26,8 +26,9 @@ const Kisa = sequelize.define('kisa', {
 
 const Sarja = sequelize.define('sarja', {
 	id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-	sarja: { type: Sequelize.TEXT, unique: true },
+	sarja: { type: Sequelize.TEXT, unique: 'kisajasarja' },
 	kisa: {
+		unique: 'kisajasarja',
 		type: Sequelize.INTEGER,
 		references: {
 			model: Kisa,
@@ -91,7 +92,7 @@ const Tulos = sequelize.define('tulos', {
 			key: 'id'
 		}
 	}
-	
+
 });
 
 module.exports = {
