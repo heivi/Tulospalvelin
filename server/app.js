@@ -15,10 +15,10 @@ const debug = true;
 const fs = require('fs');
 
 
-var mutex = require('mutex');
-var uuid = require('uuid');
+//var mutex = require('mutex');
+//var uuid = require('uuid');
 
-const dataMtx = mutex({
+/*const dataMtx = mutex({
 	id: uuid.v4(),
 	strategy: {
 		name: 'redis',
@@ -26,6 +26,7 @@ const dataMtx = mutex({
 		connectionString: 'redis://127.0.0.1'
 	}
 });
+*/
 
 var timeout;
 var dist = 200;
@@ -102,33 +103,34 @@ function handleConnection(conn) {
 		//console.log('connection data from %s: %j', remoteAddress, d);
 		//console.log(d);
 
-		var datalock = dataMtx.lock('datalock', {maxWait: 1000*60*60}, function(err, lock) {
-			if (err) {
-				console.log("Mutex error!: "+err);
-			} else {
+		//var datalock = dataMtx.lock('datalock', {maxWait: 1000*60*60}, function(err, lock) {
+		//	if (err) {
+		//		console.log("Mutex error!: "+err);
+		//	} else {
 				dataIn.push(d);
-				dataMtx.unlock(lock);
-			}
+		//		dataMtx.unlock(lock);
+		//	}
 		});
 
 		clearTimeout(timeout);
 		timeout = setTimeout(function() {
-			dataMtx.lock('datalock', function(err, lock) {
-				if (err) {
+			//dataMtx.lock('datalock', function(err, lock) {
+			//	if (err) {
+				if (false) {
 					console.log("Mutex error: "+err);
 				} else if (dataIn[dataIn.length-1].slice(dataIn[dataIn.length-1].length-16).equals(endTag)) {
 					console.log("Match");
 					let data = Buffer.concat(dataIn);
 					dataIn = [];
-					dataMtx.unlock(lock);
+			//		dataMtx.unlock(lock);
 					handleData(data);
 				} else {
 					console.log("No match: ");
 					console.log(dataIn[dataIn.length-1].slice(dataIn[dataIn.length-1].length-16));
 					console.log(endTag);
-					dataMtx.unlock(lock);
+			//		dataMtx.unlock(lock);
 				}
-			});
+			//});
 		}, dist);
 	}
 
