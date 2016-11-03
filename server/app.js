@@ -37,7 +37,7 @@ var kisatunnus = "testi_kisa";
 var kisanimi = "testi_kisa";
 var kisapvm = "28.10.2016";
 
-console.log(process.argv.length);
+//console.log(process.argv.length);
 
 if (process.argv.length >= 5) {
 	kisatunnus = process.argv[2];
@@ -110,7 +110,7 @@ function handleConnection(conn) {
 				dataIn.push(d);
 		//		dataMtx.unlock(lock);
 		//	}
-		});
+		//});
 
 		clearTimeout(timeout);
 		timeout = setTimeout(function() {
@@ -413,7 +413,7 @@ function handleConnection(conn) {
 																		}
 
 																		if (!!vapiste.changed() && ['matka'].some(v=> vapiste.changed().indexOf(v) >= 0)) {
-																			console.log(vapiste.changed());
+																			//console.log(vapiste.changed());
 																			return vapiste.save().then(function(err) {
 																				if (err == db.Sequelize.ValidationError) {
 																					console.log("Error saving vapiste: "+err);
@@ -442,7 +442,7 @@ function handleConnection(conn) {
 																			tulos.set('sija', parseInt(res['Participant'][a]['Races'][b]['Race'][0]['Intermediaries'][c]['Intermediary'][0]['Rank'][0]));
 																			//console.log(tulos.changed());
 																			if (!!tulos.changed() && ['aika', 'sija'].some(v=> tulos.changed().indexOf(v) >= 0)) {
-																				console.log("VATulos muuttunut!");
+																				//console.log("VATulos muuttunut!");
 																				return tulos.save().then(function(err) {
 																					if (err == db.Sequelize.ValidationError) {
 																						console.log("Error saving vatulos: "+err);
@@ -670,7 +670,7 @@ function handleConnection(conn) {
 																		}
 
 																		if (!!vapiste.changed() && ['matka'].some(v=> vapiste.changed().indexOf(v) >= 0)) {
-																			console.log(vapiste.changed());
+																			//console.log(vapiste.changed());
 																			return vapiste.save().then(function(err) {
 																				if (err == db.Sequelize.ValidationError) {
 																					console.log("Error saving vapiste: "+err);
@@ -758,6 +758,8 @@ function handleConnection(conn) {
 		console.log(err);
 	}
 
+	console.log("Sanoma käsitelty!");
+
 	//conn.write(d);
 }
 
@@ -775,4 +777,4 @@ server.on('listening', () => {
 	console.log(`server listening ${address.address}:${address.port}`);
 });
 
-server.listen(17901, '127.0.0.1');
+server.listen(17901, '0.0.0.0');
