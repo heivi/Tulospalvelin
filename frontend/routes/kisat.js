@@ -18,6 +18,29 @@ router.get('/', function(req, res, next) {
       kisaO.pvm = pvm.getDate()+"."+(pvm.getMonth()+1)+"."+pvm.getFullYear();
       kisat.push(kisaO);
     });
+    kisat.sort(function(a,b) {
+      aa = a.split(' ');
+      bb = b.split(' ');
+      if (parseInt(aa[2],10) > parseInt(bb[2],10)) {
+        return -1;
+      } else if (parseInt(aa[2],10) == parseInt(bb[2],10)) {
+        if (parseInt(aa[1],10) > parseInt(bb[1],10)) {
+          return -1;
+        } else if (parseInt(aa[1],10) == parseInt(bb[1],10)) {
+          if (parseInt(aa[0],10) > parseInt(bb[0],10)) {
+            return -1;
+          } else if (parseInt(aa[0],10) == parseInt(bb[0],10)) {
+            return 0;
+          } else {
+            return 1;
+          }
+        } else {
+          return 1;
+        }
+      } else {
+        return 1;
+      }
+    });
     res.render('kisat/index', { kisat: kisat, title: "Races" });
   }).catch(function(err) {
     res.status(404).render('error', {message: "Races not found", error: err});
@@ -183,9 +206,9 @@ router.get('/:kisaTunnus/:sarja/:vapiste', function(req, res, next) {
               kilpailijantulos['nro'] = kilpailija.get('nro');
               kilpailijantulos['lahtoaika'] = kilpailija.get('lahtoaika');
               kilpailijantulos['aika'] = tulos.get('aika');
-              kilpailijantulos['sija'] = tulos.get('sija');
+              //kilpailijantulos['sija'] = tulos.get('sija');
               //console.log(kilpailijantulos);
-              if (vapiste.get('jarjestys') == 0 || kilpailijantulos['aika'] != "00:00:00") {
+              if (vapiste.get('jarjestys') == 0 || (kilpailijantulos['aika'] != "00:00:00" && kilpailijantulos['aika'] != "00:00:00,0")) {
                 tulokset.push(kilpailijantulos);
               }
             }).catch(function(err) {
@@ -195,21 +218,103 @@ router.get('/:kisaTunnus/:sarja/:vapiste', function(req, res, next) {
           });
 
           Promise.all(tulospromises).then(function(ret) {
-            tulokset.sort(function (a, b) {
-              //console.log(a['sija']+'?'+b['sija']);
-              if (a['sija'] != 0 && b['sija'] != 0) {
-                //console.log(a['sija']-b['sija']);
-                return a['sija']-b['sija'];
-              } else if (b['sija'] == 0 && a['sija'] == 0) {
-                //console.log(0);
-                return 0;
-              } else if (a['sija'] == 0) {
-                return 1;
-              } else if (b['sija'] == 0) {
+
+            /*
+            kisat.sort(function(a,b) {
+              aa = a.split(' ');
+              bb = b.split(' ');
+              if (parseInt(aa[2],10) > parseInt(bb[2],10)) {
                 return -1;
+              } else if (parseInt(aa[2],10) == parseInt(bb[2],10)) {
+                if (parseInt(aa[1],10) > parseInt(bb[1],10)) {
+                  return -1;
+                } else if (parseInt(aa[1],10) == parseInt(bb[1],10)) {
+                  if (parseInt(aa[0],10) > parseInt(bb[0],10)) {
+                    return -1;
+                  } else if (parseInt(aa[0],10) == parseInt(bb[0],10)) {
+                    return 0;
+                  } else {
+                    return 1;
+                  }
+                } else {
+                  return 1;
+                }
               } else {
-                //console.log(1);
                 return 1;
+              }
+            });
+            */
+
+            tulokset.sort(function (a, b) {
+              let astatus;
+              let bstatus;
+              if (vapiste.get('jarjestys') == 0) {
+                astatus = a['status'].replace('Open', 'OK');
+                bstatus = b['status'].replace('Open', 'OK');
+              } else {
+                astatus = a['status'].replace('Open', 'OK').replace('DNF', 'OK').replace('DQ', 'OK');
+                bstatus = b['status'].replace('Open', 'OK').replace('DNF', 'OK').replace('DQ', 'OK');
+              }
+              let aa = a['aika'].split(':');
+              let bb = b['aika'].split(':');
+              let ah = parseInt(aa[0],10);
+              let bh = parseInt(bb[0],10);
+              let amin = parseInt(aa[1],10);
+              let bmin = parseInt(bb[1],10);
+              let as = parseFloat(aa[2].replace(',', '.'));
+              let bs = parseFloat(bb[2].replace(',', '.'));
+
+              if (astatus == "OK" && bstatus == "OK") {
+                if (ah < bh) {
+                  return -1;
+                } else if (ah > bh) {
+                  return 1;
+                } else {
+                  if (amin < bmin) {
+                    return -1;
+                  } else if (amin > bmin) {
+                    return 1;
+                  } else {
+                    if (as < bs) {
+                      return -1;
+                    } else if (as > bs) {
+                      return 1;
+                    } else {
+                      return 0;
+                    }
+                  }
+                }
+              } else if (astatus == "OK") {
+                return -1;
+              } else if (bstatus == "OK") {
+                return 1;
+              } else {
+                if (astatus == bstatus) {
+                  return 0;
+                } else if (astatus == "DQ") {
+                  return -1;
+                } else if (bstatus == "DQ") {
+                  return 1;
+                } else if (astatus == "DNF") {
+                  return -1;
+                } else if (bstatus == "DNF") {
+                  return 1;
+                } else if (astatus == "Vacant") {
+                  return 1;
+                } else if (bstatus == "Vacant") {
+                  return -1;
+                } else {
+                  return 0;
+                }
+              }
+            });
+
+            let sija = 1;
+            tulokset.forEach(function(el, ind) {
+              if (el['status'] == "OK") {
+                tulokset[ind]['sija'] = sija++;
+              } else {
+                tulokset[ind]['sija'] = 0;
               }
             });
 
