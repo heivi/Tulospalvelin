@@ -19,8 +19,8 @@ router.get('/', function(req, res, next) {
       kisat.push(kisaO);
     });
     kisat.sort(function(a,b) {
-      aa = a.split(' ');
-      bb = b.split(' ');
+      aa = a['pvm'].split('.');
+      bb = b['pvm'].split('.');
       if (parseInt(aa[2],10) > parseInt(bb[2],10)) {
         return -1;
       } else if (parseInt(aa[2],10) == parseInt(bb[2],10)) {
@@ -130,6 +130,7 @@ router.get('/:kisaTunnus/:sarja/:vapiste', function(req, res, next) {
   }).then(function(kisa) {
     db.Sarja.findOne({
       where: {
+        kisa: kisa.get('id'),
         sarja: req.params['sarja']
       }
     }).then(function(sarja) {
