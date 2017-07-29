@@ -1,9 +1,13 @@
+const Promise = require('bluebird');
+const Sequelize = require('sequelize');
+//const Promise = Sequelize.Promise;
 const cls = require('continuation-local-storage');
 const clsns = cls.createNamespace('pirilatp');
+const clsBluebird = require('cls-bluebird');
+clsBluebird(clsns, Promise);
+Sequelize.useCLS(clsns);
 
-var Sequelize = require('sequelize');
-
-Sequelize.cls = clsns;
+//Sequelize.cls = clsns;
 
 const sequelize = new Sequelize('tpdb', 'tpuser', 'tpsala', {
 	host: 'localhost',
@@ -11,7 +15,11 @@ const sequelize = new Sequelize('tpdb', 'tpuser', 'tpsala', {
 	dialect: 'postgres',
 //	storage: './database.sqlite',
 	logging: false,
-	pool: false,
+	pool: {
+    max: 1,
+    min: 0,
+    idle: 10000
+  },
 	retry: {
 		max: 999
 	}
@@ -21,7 +29,8 @@ const Kisa = sequelize.define('kisa', {
 	id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
 	tunnus: { type: Sequelize.TEXT, unique: true },
 	nimi: { type: Sequelize.TEXT },
-	pvm: { type: Sequelize.DATEONLY }
+	pvm: { type: Sequelize.DATEONLY },
+	viesti: { type: Sequelize.BOOLEAN }
 });
 
 const Sarja = sequelize.define('sarja', {
@@ -34,7 +43,8 @@ const Sarja = sequelize.define('sarja', {
 			model: Kisa,
 			key: 'id'
 		}
-	}
+	},
+	osuudet: { type: Sequelize.INTEGER }
 });
 
 // väliajat ja maali
@@ -48,7 +58,8 @@ const VAPiste = sequelize.define('vapiste', {
 			model: Sarja,
 			key: 'id'
 		}
-	}
+	},
+	osuus: { type: Sequelize.INTEGER }
 });
 
 const Kilpailija = sequelize.define('kilpailija', {
@@ -71,7 +82,10 @@ const Kilpailija = sequelize.define('kilpailija', {
 			model: Kisa,
 			key: 'id'
 		}
-	}
+	},
+	joukkue: { type: Sequelize.TEXT },
+	jnro: { type: Sequelize.INTEGER },
+	osuus: { type: Sequelize.INTEGER }
 });
 
 const Tulos = sequelize.define('tulos', {

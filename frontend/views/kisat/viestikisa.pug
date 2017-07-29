@@ -1,0 +1,40 @@
+extends ../layout
+
+block content
+  h1= title
+  a(href='../..') <- Back
+  table
+    thead
+      tr
+        th
+        th Splits
+        th
+    tbody
+      each sarja, ind in taulukkoDatat
+        tr(class=ind%2 == 0 ? "even" : "odd")
+          td(class='sarja')
+            - let sarjannimi = sarja['sarja'];
+            //a(href=sarjannimi)= sarjannimi
+            =sarjannimi
+        each val, osuus in sarja['vapisteet']
+          tr(class=ind%2 == 0 ? "even" : "odd")
+            td
+              = "Leg "+(osuus+1)
+            //  = val
+            each vapiste in val
+              - let pisteennumero = vapiste['nro'];
+              - let pisteenmatka = vapiste['matka'];
+              td
+                if pisteennumero == 0
+                  if pisteenmatka == 0
+                    a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Finish'
+                  else
+                    a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Finish (' + pisteenmatka +')'
+                else
+                  if pisteenmatka.length < 2
+                    a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Split '+pisteenmatka
+                  else
+                    a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= pisteenmatka
+                //| &nbsp;&nbsp;&nbsp;
+            td
+              //a(href=sarjannimi+'/start') Start times

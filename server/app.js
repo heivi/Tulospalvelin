@@ -36,19 +36,24 @@ var splitfile = "";
 var kisatunnus = "testi_kisa";
 var kisanimi = "testi_kisa";
 var kisapvm = "28.10.2016";
+var viesti = false;
 
 //console.log(process.argv.length);
 
-if (process.argv.length >= 5) {
-	kisatunnus = process.argv[2];
-	kisanimi = process.argv[3];
-	kisapvm = process.argv[4];
-} else if (process.argv.length >= 3) {
-	splitfile = process.argv[2];
+if (process.argv.length >= 2) {
+	viesti = process.argv[2] == "1";
+}
+
+if (process.argv.length >= 6) {
+	kisatunnus = process.argv[3];
+	kisanimi = process.argv[4];
+	kisapvm = process.argv[5];
+} else if (process.argv.length >= 4) {
+	splitfile = process.argv[3];
 	//console.log(splitfile);
 }
-if (process.argv.length >= 6) {
-	splitfile = process.argv[5];
+if (process.argv.length >= 7) {
+	splitfile = process.argv[6];
 	//console.log(splitfile);
 }
 
@@ -65,6 +70,11 @@ if (splitfile != "") {
 	// H21A 0 5,5km
 	// H21A 1 2,5 km
 	// H21A 2 4,9km
+	// Viesti:
+	// H21A-1 0 5,6km
+	// H21A-2 1 2,4km
+	// H21A-3 0 5,8km
+	// H21A-10 0 123,42km
 
 	fs.readFile(splitfile, 'utf8', (err, data) => {
 		//console.log(data);
@@ -197,7 +207,8 @@ function handleConnection(conn) {
 
 					kisa.set('nimi', kisanimi);
 					kisa.set('pvm', kisapvm);
-					if (!!kisa.changed() && ['nimi', 'pvm'].some(v=> kisa.changed().indexOf(v) >= 0)) {
+					kisa.set('viesti', viesti);
+					if (!!kisa.changed() && ['nimi', 'pvm', 'viesti'].some(v=> kisa.changed().indexOf(v) >= 0)) {
 
 						return kisa.save().then(function(err) {
 							if (err == db.Sequelize.ValidationError) {
@@ -208,7 +219,7 @@ function handleConnection(conn) {
 							return Promise.resolve(kisa);
 						});
 					} else {
-						console.log("Kisa ei muuttunut");
+						//console.log("Kisa ei muuttunut");
 						return Promise.resolve(kisa);
 					}
 
@@ -497,7 +508,7 @@ function handleConnection(conn) {
 										return db.Sarja.findOrCreate({
 											where: {
 												kisa: kisa.get('id'),
-												sarja: res['Participant'][a]['ClassId'][0]
+												sarja: res['Participant'][a]['ClassId'][0],
 											}
 										}).then(function(sarjajaluotu) {
 											//console.log("v6");
@@ -505,6 +516,7 @@ function handleConnection(conn) {
 											let sarjaluotu = sarjajaluotu[1];
 
 											if (sarjaluotu) {
+												sarja.set('osuudet', res['Participant'][a]['Leg'][b]['$']['LegNo'][0]);
 												sarja.set('kisa', kisa.get('id'));
 
 												return sarja.save().then(function(err) {
@@ -516,7 +528,17 @@ function handleConnection(conn) {
 													return Promise.resolve(sarja);
 												});
 											} else {
-												return Promise.resolve(sarja);
+												if (res['Participant'][a]['Leg'][b]['$']['LegNo'][0] > sarja.get('osuudet')) {
+													sarja.set('osuudet', res['Participant'][a]['Leg'][b]['$']['LegNo'][0]);
+												}
+												return sarja.save().then(function(err) {
+													if (err == db.Sequelize.ValidationError) {
+														console.log("Error saving sarja: "+err);
+														return Promise.reject(err);
+													}
+													//console.log("Sarja päivitetty");
+													return Promise.resolve(sarja);
+												});
 											}
 
 										}).catch(function(err) {
@@ -530,7 +552,8 @@ function handleConnection(conn) {
 										db.sequelize.transaction(function(t) {
 											return db.Kilpailija.findOrCreate({
 												where: {
-													nro: res['Participant'][a]['Id'][0] + "0" + res['Participant'][a]['Leg'][b]['$']['LegNo'][0],
+													nro: res['Participant'][a]['Id'][0],
+													osuus: res['Participant'][a]['Leg'][b]['$']['LegNo'][0],
 													kisa: kisa.get('id')/*,
 													etunimi: res['Participant'][a]['Name'][0]['Given'][0],
 													sukunimi: res['Participant'][a]['Name'][0]['Family'][0]*/
@@ -542,10 +565,13 @@ function handleConnection(conn) {
 												kilpailija.set('sarja', sarja.get('id'));
 												//kilpailija.set('lahtoaika', res['Participant'][a]['Races'][b]['Race'][0]['StartTime'][0]);
 												kilpailija.set('status', res['Participant'][a]['Leg'][b]['LegStatus'][0]);
-												kilpailija.set('etunimi', res['Participant'][a]['Club'][0] + "-" + res['Participant'][a]['TeamNo'][0] + " - " + res['Participant'][a]['Leg'][b]['Name'][0]['Given'][0]);
+												kilpailija.set('etunimi', res['Participant'][a]['Leg'][b]['Name'][0]['Given'][0]);
 												kilpailija.set('sukunimi', res['Participant'][a]['Leg'][b]['Name'][0]['Family'][0]);
+												kilpailija.set('joukkue', res['Participant'][a]['Club'][0]);
+												kilpailija.set('jnro', res['Participant'][a]['TeamNo'][0])
+												//res['Participant'][a]['Club'][0] + "-" + res['Participant'][a]['TeamNo'][0] + " - " +
 
-												if (!!kilpailija.changed() && ['sarja', 'lahtoaika', 'status', 'etunimi', 'sukunimi'].some(v=> kilpailija.changed().indexOf(v) >= 0)) {
+												if (!!kilpailija.changed() && ['sarja', 'lahtoaika', 'status', 'etunimi', 'sukunimi', 'joukkue', 'jnro'].some(v=> kilpailija.changed().indexOf(v) >= 0)) {
 
 													return kilpailija.save().then(function(err) {
 														if (err == db.Sequelize.ValidationError) {
@@ -570,6 +596,7 @@ function handleConnection(conn) {
 												return db.VAPiste.findOrCreate({
 													where: {
 														jarjestys: 0,
+														osuus: kilpailija.get('osuus'),
 														sarja: sarja.get('id')
 													}
 												}).then(function(maalipistejaluotu) {
@@ -579,7 +606,7 @@ function handleConnection(conn) {
 
 													// hae pisteiden etäisyydet muusta tiedosta
 
-													var splitDist = ((splitDists || {})[sarja.get('sarja')] || {})[0];
+													var splitDist = ((splitDists || {})[sarja.get('sarja')+"-"+kilpailija.get('osuus')] || {})[0];
 													if (typeof splitDist != 'undefined') {
 														//console.log("*****SPLIT SET******");
 														maalipiste.set('matka', splitDist.toString());
@@ -651,6 +678,7 @@ function handleConnection(conn) {
 																return db.VAPiste.findOrCreate({
 																	where: {
 																		sarja: sarja.get('id'),
+																		osuus: kilpailija.get('osuus'),
 																		jarjestys: parseInt(res['Participant'][a]['Leg'][b]['Intermediaries'][c]['Intermediary'][0]['$']['Order'])
 																	}
 																}).then(function(vapistejaluotu) {
@@ -661,7 +689,7 @@ function handleConnection(conn) {
 																	// TODO: Is this right...?
 																	return new Promise(function(resolve, reject) {
 																		// hae pisteiden etäisyydet muusta tiedosta
-																		var splitDist = ((splitDists || {})[sarja.get('sarja')] || {})[vapiste.get('jarjestys')];
+																		var splitDist = ((splitDists || {})[sarja.get('sarja')+"-"+kilpailija.get('osuus')] || {})[vapiste.get('jarjestys')];
 																		if (typeof splitDist != 'undefined') {
 																			//console.log("*****SPLIT SET******");
 																			vapiste.set('matka', splitDist.toString());

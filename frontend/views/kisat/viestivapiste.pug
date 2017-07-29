@@ -1,0 +1,45 @@
+extends ../layout
+
+block content
+  - let matka = vapiste.matka
+  - let osuus = vapiste.osuus
+  if valiaika
+    //if matka != vapiste.jarjestys
+    h1 Split time #{matka}
+    //else
+    //  h1 Split time 
+  else
+    if matka != 0
+      h1 Results #{matka}
+    else
+      h1 Results
+  a(href='../../..') <- Back
+  h2= sarja+" - Leg "+osuus
+  table(class='results')
+    thead
+      tr
+        th Rank
+        th No
+        th Team
+        th Name
+        th Time
+        th Diff
+        th Status
+    tbody
+      each tulos, ind in tulokset
+        tr(class=ind%2 == 0 ? "evenres" : "oddres")
+          td
+            if tulos.sija != 0
+              =tulos.sija
+          td
+            =tulos.nro
+          td
+            =tulos.joukkue+" "+tulos.jnro
+          td
+            =tulos.nimi
+          td
+            =tulos.aika
+          td
+            =tulos.aikadiff
+          td
+            =tulos.status
