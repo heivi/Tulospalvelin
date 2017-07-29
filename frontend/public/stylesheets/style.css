@@ -1,6 +1,7 @@
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  width: 100%;
 }
 
 a {
@@ -40,4 +41,8 @@ td, th {
 
 .results td, .results th {
   border: 1px solid black;
+}
+
+.overflow {
+  overflow-x: auto;
 }
