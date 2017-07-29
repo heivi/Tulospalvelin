@@ -31,7 +31,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function (req, res, next) {
-  res.setHeader('Cache-Control', 'max-age=60');
+  res.setHeader('Cache-Control', 'max-age=10');
   next()
 });
 
