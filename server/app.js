@@ -81,10 +81,12 @@ if (splitfile != "") {
 		if (err) throw err;
 		let lines = data.split(/\r?\n/);
 		lines.forEach(function (el) {
-			let arr = el.split(' ');
-			if (arr.length > 2) {
+			let arr = el.match(/(?:[^\s"]+|"[^"]*")+/g);
+			//let arr = el.split(' ');
+			if (typeof (arr) != 'undefined' && arr != null && arr.length > 2) {
 				let result = arr.splice(0,2);
 				result.push(arr.join(' '));
+				result[0] = result[0].replace(/^"(.+(?="$))"$/, '$1');
 				if (typeof splitDists[result[0]] == 'undefined') {
 					splitDists[result[0]] = {};
 				}
