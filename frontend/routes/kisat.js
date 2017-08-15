@@ -128,6 +128,7 @@ router.get('/:kisaTunnus/', function(req, res, next) {
         let taulukkoDatat = [];
         let promises = [];
         let maxVAt = 0;
+	let maxosuus = 0;
         sarjat.forEach(function (sarja) {
           let sarjaDatat = {};
           sarjaDatat['sarja'] = sarja.get('sarja');
@@ -140,6 +141,9 @@ router.get('/:kisaTunnus/', function(req, res, next) {
           }).then(function(vapisteet) {
             //console.log(vapisteet);
             vapisteet.forEach(function(vapiste) {
+              if (vapiste.get('osuus')-1 > maxosuus) {
+                maxosuus = vapiste.get('osuus')-1;
+              }
               if (typeof (sarjanVApisteet[vapiste.get('osuus')-1]) == 'undefined') {
                 sarjanVApisteet[vapiste.get('osuus')-1] = [];
               }
@@ -149,6 +153,12 @@ router.get('/:kisaTunnus/', function(req, res, next) {
               //console.log(vapistedata);
               sarjanVApisteet[vapiste.get('osuus')-1].push(vapistedata);
             });
+
+            for (let i = 0; i <= maxosuus; i++) {
+              if (typeof(sarjanVApisteet[i]) == 'undefined') {
+                sarjanVApisteet[i] = [];
+              }
+            }
 
             sarjanVApisteet.forEach(function(osuudenVApisteet, osuus) {
               //console.log(osuus);
@@ -174,6 +184,7 @@ router.get('/:kisaTunnus/', function(req, res, next) {
           //console.log(taulukkoDatat);
 
           taulukkoDatat.forEach(function(el) {
+            //console.log(el);
             el['vapisteet'].forEach(function(val, osuus) {
               while (el['vapisteet'][osuus].length < maxVAt) {
                 el['vapisteet'][osuus].push({});

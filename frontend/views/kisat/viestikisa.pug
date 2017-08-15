@@ -27,15 +27,15 @@ block content
                 - let pisteenmatka = vapiste['matka'];
                 td
                   if pisteennumero == 0
-                    if pisteenmatka == 0
-                      a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Finish'
-                    else
-                      a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Finish (' + pisteenmatka +')'
+                    //if pisteenmatka == 0
+                    //  a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Finish'
+                    //else
+                    a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Finish (' + pisteenmatka +')'
                   else
-                    if pisteenmatka.length < 2
-                      a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Split '+pisteenmatka
-                    else
-                      a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= pisteenmatka
+                    //if pisteenmatka.length < 2
+                    //  a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= 'Split '+pisteenmatka
+                    //else
+                    a(href=sarjannimi+'/'+osuus+'/'+pisteennumero)= pisteenmatka
                   //| &nbsp;&nbsp;&nbsp;
               td
                 //a(href=sarjannimi+'/start') Start times
