@@ -4,18 +4,19 @@ block content
   h1= title
   a(href='../..') <- Back
   h2= sarja
-  table
-    thead
-      tr
-        th No
-        th Name
-        th Start time
-    tbody
-      each rivi in lahtoajat
+  div(class='overflow')
+    table(class='results')
+      thead
         tr
-          td
-            =rivi.nro
-          td
-            =rivi.nimi
-          td
-            =rivi.lahtoaika
+          th No
+          th Name
+          th Start time
+      tbody
+        each rivi, ind in lahtoajat
+          tr(class=ind%2 == 0 ? "evenres" : "oddres")
+            td
+              =rivi.nro
+            td
+              =rivi.nimi
+            td
+              =rivi.lahtoaika
