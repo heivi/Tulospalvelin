@@ -40,7 +40,12 @@ var viesti = false;
 
 //console.log(process.argv.length);
 
-if (process.argv.length >= 2) {
+if (process.argv.length < 3) {
+	console.log("Usage: node app.js <viesti = 1, ind = 0> [kisatunnus kisanimi <kisapvm 24.5.2017>] splitfile.txt");
+	return 1;
+}
+
+if (process.argv.length >= 3) {
 	viesti = process.argv[2] == "1";
 }
 
